@@ -7,7 +7,7 @@
 
 - name: Uninstall bahmni-mart rpm
   yum: name="bahmni-mart" state=absent
-  when: installed_bahmni_mart.results|length != 0 and installed_bahmni_mart.results[0].version != "{{ bahmni_mart_version }}"
+  when: installed_bahmni_mart.results|length != 0 and installed_bahmni_mart.results[0].version != "{{ bahmni_mart_version }}" and installed_bahmni_mart.results[0].release != "{{ bahmni_mart_release }}"
 
 - name: Install bahmni-mart using URL
   yum: name="{{ bahmni_mart_url }}" state=present

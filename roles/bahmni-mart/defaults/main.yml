@@ -1,4 +1,5 @@
-bahmni_mart_version: "1.0.0-9"
+bahmni_mart_version: "1.0.0"
+bahmni_mart_release: "9"
 bahmni_mart_url: "https://s3.eu-central-1.amazonaws.com/bahmni-artifacts/bahmni-mart/bahmni-mart.noarch.rpm"
 openmrs_db_name: openmrs
 openmrs_db_username: openmrs-user
