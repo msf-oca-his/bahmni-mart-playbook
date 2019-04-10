@@ -1,4 +1,16 @@
 # This is copied from bahmni-playbooks and will be deleted after merged with bahmni.
+- name: Check if postgresql needs an update
+  yum:
+    list: postgresql
+  register: postgresql_info
+  ignore_errors: true
+
+- name: Uninstall postgresql
+  yum:
+    name: postgresql
+    state: absent
+  when: postgresql_info.results|length != 0 and postgresql_info.results[0].version != "{{ postgres_full_version }}"
+
 - name: Check if postgres yum repo rpm is present
   stat: path={{postgres_repo_rpm_location}}
   register: postgresRepoRpm
