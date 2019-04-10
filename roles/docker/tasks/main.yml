@@ -20,7 +20,7 @@
   yum:
     name: docker-engine
     state: absent
-  when: docker_engine_info.results|length != 0 and docker_engine_info.results[0].version != "{{ docker_version }}"
+  when: docker_engine_info.results|length != 0
 
 - name: Check if docker-ce needs an update
   yum:
@@ -30,7 +30,7 @@
 
 - name: Uninstall docker-ce
   yum:
-    name: docker-engine
+    name: docker-ce
     state: absent
   when: docker_ce_info.results|length != 0 and docker_ce_info.results[0].version != "{{ docker_version }}"
 
