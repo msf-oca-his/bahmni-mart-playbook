@@ -7,7 +7,7 @@
 
 - name: Uninstall postgresql
   yum:
-    name: postgresql
+    name: postgresql*
     state: absent
   when: postgresql_info.results|length != 0 and postgresql_info.results[0].version != "{{ postgres_full_version }}"
 
