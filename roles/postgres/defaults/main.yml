@@ -3,7 +3,6 @@ postgres_repo_rpm_name: pgdg-centos96-9.6-3.noarch.rpm
 postgres_repo_download_url: http://yum.postgresql.org/9.6/redhat/rhel-6-x86_64/{{postgres_repo_rpm_name}}
 postgres_repo_rpm_location: "{{download_folder}}/{{ postgres_repo_rpm_name}}"
 postgres_version: 9.6
-postgres_full_version: 9.6.12
 postgresql_data_dir: /var/lib/pgsql
 postgresql_packages:
   - python-psycopg2
