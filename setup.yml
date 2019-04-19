@@ -3,9 +3,8 @@ analytics_db_user: analytics
 metabase_db_user: metabase
 analytics_db_name: analytics
 metabase_db_name: metabase
-ANALYTICS_DB_PASSWORD: ''
-OPENMRS_DB_PASSWORD: P@ssw0rd
-METABASE_DB_PASSWORD: pass
+analytics_db_password: ''
+openmrs_db_password: P@ssw0rd
 metabase_db_password: pass
 metabase_with_ssl: false
 bahmni_lets_encrypt_cert_dir: ""
