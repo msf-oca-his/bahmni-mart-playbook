@@ -7,3 +7,6 @@ ANALYTICS_DB_PASSWORD: ''
 OPENMRS_DB_PASSWORD: P@ssw0rd
 METABASE_DB_PASSWORD: pass
 metabase_db_password: pass
+metabase_with_ssl: false
+bahmni_lets_encrypt_cert_dir: ""
+metabase_keystore_password: ""
