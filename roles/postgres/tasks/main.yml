@@ -93,16 +93,16 @@
 - name: Add password for postgres user
   postgresql_user:
     name: postgres
-    password: "{{ postgres_password }}"
+    password: "{{postgres_password}}"
     login_user: postgres
   when: inventory_hostname in groups['bahmni-mart-db']
 
 - name: Create analytics user with password
   postgresql_user:
-    name: "{{ analytics_db_user }}"
-    password: "{{ analytics_db_password }}"
+    name: "{{analytics_db_user}}"
+    password: "{{analytics_db_password}}"
     login_user: postgres
-    login_password: "{{ postgres_password }}"
+    login_password: "{{postgres_password}}"
     role_attr_flags: CREATEDB,NOCREATEROLE,SUPERUSER,REPLICATION
   when: inventory_hostname in groups['bahmni-mart-db']
 
