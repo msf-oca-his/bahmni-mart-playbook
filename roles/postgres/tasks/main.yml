@@ -62,7 +62,7 @@
   file:
       path=/var/lib/pgsql/{{ postgres_version }}/data/recovery.conf
       state=absent
-  when: inventory_hostname in groups['bahmni-mart-db'] or inventory_hostname in groups['metabase-db']
+  when: inventory_hostname in groups['bahmni-mart-db']
   register: recovery_conf
 
 - block:
@@ -90,8 +90,48 @@
     enabled=yes
     state=started
 
-- name: Create postgres user
-  postgresql_user: name={{ postgres_user }} role_attr_flags=CREATEDB,NOCREATEROLE,SUPERUSER,REPLICATION
-  sudo_user: postgres
-  when: postgres_user is defined and (inventory_hostname in groups['bahmni-mart-db'] or inventory_hostname in groups['metabase-db'])
+- name: Add password for postgres user
+  postgresql_user:
+    name: postgres
+    password: "{{ postgres_password }}"
+    login_user: postgres
+  when: inventory_hostname in groups['bahmni-mart-db']
+
+- name: Create analytics user with password
+  postgresql_user:
+    name: "{{ analytics_db_user }}"
+    password: "{{ analytics_db_password }}"
+    login_user: postgres
+    login_password: "{{ postgres_password }}"
+    role_attr_flags: CREATEDB,NOCREATEROLE,SUPERUSER,REPLICATION
+  when: inventory_hostname in groups['bahmni-mart-db']
+
+- name: update postgres config(mandate password) after "local" is for Unix domain socket connections only line
+  lineinfile:
+    dest: /var/lib/pgsql/{{ postgres_version }}/data/pg_hba.conf
+    regexp: '^local\s+all\s+all\s+trust'
+    state: present
+    backrefs: yes
+    line: local  all    all   md5
+
+- name: update postgres config(mandate password) after IPv4 local connections line
+  lineinfile:
+    dest: /var/lib/pgsql/{{ postgres_version }}/data/pg_hba.conf
+    regexp: '^host\s+all\s+all\s+127.0.0.1/32\s+trust'
+    state: present
+    backrefs: yes
+    line: host  all    all   127.0.0.1/32 md5
+
+- name: update postgres config(mandate password) after IPv6 local connections line
+  lineinfile:
+    dest: /var/lib/pgsql/{{ postgres_version }}/data/pg_hba.conf
+    regexp: '^host\s+all\s+all\s+::1/128\s+trust'
+    state: present
+    backrefs: yes
+    line: host  all    all   ::1/128 md5
+
+- name: Restart PostgreSQL
+  service:
+    name=postgresql-{{ postgres_version }}
+    state=restarted
 # creating user only in master dbs. User creation will be replicated in slave.
