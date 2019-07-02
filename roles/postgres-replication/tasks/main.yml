@@ -5,7 +5,7 @@
   when: "{{ inventory_hostname in groups['bahmni-mart-db'] or inventory_hostname in groups['metabase-db'] }}"
 
 - name: Postgres replication setup in slave
-  include: slave.yml
+  include_tasks: slave.yml
   when: "{{ inventory_hostname in groups['bahmni-mart-db-slave'] or inventory_hostname in groups['metabase-db-slave'] }}"
 
 - name: Restart PostgreSQL

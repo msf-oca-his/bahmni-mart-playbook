@@ -2,7 +2,7 @@
 - hosts: bahmni-mart-db:bahmni-mart-db-slave
   become: yes
   roles:
-    - { role: postgres, postgres_user: analytics }
+    - { role: postgres}
     - { role: postgres-replication, replication_user: "{{ analytics_db_user }}", master_db: "{{ groups['bahmni-mart-db'][0] }}" }
 
 - hosts: bahmni-mart
@@ -10,19 +10,3 @@
   roles:
     - { role: bahmni-mart }
     - { role: gnupg }
-
-- hosts: bahmni-mart-scdf
-  become: yes
-  roles:
-    - { role: bahmni-mart-scdf }
-
-- hosts: metabase-db:metabase-db-slave
-  become: yes
-  roles:
-    - { role: postgres, postgres_user: metabase }
-    - { role: postgres-replication, replication_user: "{{ metabase_db_user }}", master_db: "{{ groups['metabase-db'][0] }}" }
-
-- hosts: metabase
-  become: yes
-  roles:
-    - { role:  metabase }

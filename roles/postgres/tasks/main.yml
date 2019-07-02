@@ -21,9 +21,8 @@
   register: pgdata_dir_version
   when: inventory_hostname in groups['bahmni-mart-db']
 
-
 - copy:
-    src: initbfile
+    src: initdbfile
     dest: /tmp/initdbfile
     mode: 0777
     owner: postgres
