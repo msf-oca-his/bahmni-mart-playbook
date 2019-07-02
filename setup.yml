@@ -1,6 +1,6 @@
 bahmni_mart_version: "1.0.0-1"
-analytics_db_user: " {{ANALYTICS_DB_USER}}"
-analytics_db_name: " {{ANALYTICS_DB_NAME}} "
+analytics_db_user: "{{ANALYTICS_DB_USER}}"
+analytics_db_name: "{{ANALYTICS_DB_NAME}}"
 analytics_db_password: "{{ANALYTICS_DB_PASSWORD}}"
 openmrs_db_password: "{{OPENMRS_DB_PASSWORD}}"
 postgres_password: "{{POSTGRES_PASSWORD}}"

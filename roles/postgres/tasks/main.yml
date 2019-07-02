@@ -19,44 +19,32 @@
   stat:
     path: "{{ postgresql_data_dir }}/{{ postgres_version }}/data/base"
   register: pgdata_dir_version
+  when: inventory_hostname in groups['bahmni-mart-db']
 
-- name: Initiate database
-  command: /usr/pgsql-"{{ postgres_version }}"/bin/postgresql96-setup initdb
+
+- copy:
+    src: initbfile
+    dest: /tmp/initdbfile
+    mode: 0777
+    owner: postgres
+
+- name: initdb
+  command:  /usr/pgsql-9.6/bin/initdb --pgdata=/var/lib/pgsql/9.6/data --username=postgres --pwfile='/tmp/initdbfile'
+  become_user: postgres
   when: not pgdata_dir_version.stat.exists
 
-- name: Copy postgresql conf
-  template:
-    src=postgresql.conf.j2
-    dest={{ postgresql_data_dir }}/{{ postgres_version }}/data/postgresql.conf
-    owner=postgres
-    group=postgres
-    mode=644
-  register: postgres_conf
+- name: Configure connection rules and postgres
+  template: src={{ item.src }} dest={{ postgresql_data_dir }}/{{ postgres_version }}/data/{{ item.src | regex_replace(".j2") }}
+  with_items:
+  - { src: "postgresql.conf.j2" }
+  - { src: "pg_hba.conf.j2" }
+  notify: Restart PostgreSQL
 
-- name: insert/update postgres config after "local" is for Unix domain socket connections only line
-  lineinfile:
-    dest: /var/lib/pgsql/{{ postgres_version }}/data/pg_hba.conf
-    regexp: '^local\s+all\s+all\s+peer'
-    state: present
-    backrefs: yes
-    line: local  all    all   trust
-
-- name: insert/update postgres config after IPv4 local connections line
-  lineinfile:
-    dest: /var/lib/pgsql/{{ postgres_version }}/data/pg_hba.conf
-    regexp: '^host\s+all\s+all\s+127.0.0.1/32\s+ident'
-    state: present
-    backrefs: yes
-    line: host  all    all   127.0.0.1/32 trust
-
-- name: insert/update postgres config after IPv6 local connections line
-  lineinfile:
-    dest: /var/lib/pgsql/{{ postgres_version }}/data/pg_hba.conf
-    regexp: '^host\s+all\s+all\s+::1/128\s+ident'
-    state: present
-    backrefs: yes
-    line: host  all    all   ::1/128 trust
-
+- name: Start PostgreSQL
+  service:
+    name: postgresql-{{ postgres_version }}
+    state: started
+    enabled: yes
 
 - name: Removing recovery config file from master db
   file:
@@ -65,73 +53,22 @@
   when: inventory_hostname in groups['bahmni-mart-db']
   register: recovery_conf
 
+- name: Create analytics user
+  postgresql_user:
+    name: "{{ analytics_db_user }}"
+    password: "{{ analytics_db_password }}"
+    login_password: "{{ postgres_password }}"
+  when: inventory_hostname in groups['bahmni-mart-db']
+
 - block:
 
-    - name: Get matched IpTable rule
-      shell: iptables -nL --line-numbers | grep POSTGRES  -m 1 | cut -c 1-2
-      register: matchedRule
+  - name: Get matched IpTable rule
+    shell: iptables -nL --line-numbers | grep POSTGRES  -m 1 | cut -c 1-2
+    register: matchedRule
 
-    - name: delete matching rule if exists
-      shell: iptables -D INPUT {{ matchedRule.stdout }}
-      when: matchedRule.stdout!=""
+  - name: delete matching rule if exists
+    shell: iptables -D INPUT {{ matchedRule.stdout }}
+    when: matchedRule.stdout!=""
 
-    - name: Allow postgres port through firewall
-      command: /sbin/iptables -I INPUT 1 -p tcp --dport  5432 -j ACCEPT -m comment --comment "POSTGRES"
-
-- name: Stop PostgreSQL
-  service:
-    name=postgresql-{{ postgres_version }}
-    state=stopped
-  when: postgres_conf.changed==true or (recovery_conf is defined and recovery_conf.changed==true)
-
-- name: Start PostgreSQL and enable at boot
-  service:
-    name=postgresql-{{ postgres_version }}
-    enabled=yes
-    state=started
-
-- name: Add password for postgres user
-  postgresql_user:
-    name: postgres
-    password: "{{postgres_password}}"
-    login_user: postgres
-  when: inventory_hostname in groups['bahmni-mart-db']
-
-- name: Create analytics user with password
-  postgresql_user:
-    name: "{{analytics_db_user}}"
-    password: "{{analytics_db_password}}"
-    login_user: postgres
-    login_password: "{{postgres_password}}"
-    role_attr_flags: CREATEDB,NOCREATEROLE,SUPERUSER,REPLICATION
-  when: inventory_hostname in groups['bahmni-mart-db']
-
-- name: update postgres config(mandate password) after "local" is for Unix domain socket connections only line
-  lineinfile:
-    dest: /var/lib/pgsql/{{ postgres_version }}/data/pg_hba.conf
-    regexp: '^local\s+all\s+all\s+trust'
-    state: present
-    backrefs: yes
-    line: local  all    all   md5
-
-- name: update postgres config(mandate password) after IPv4 local connections line
-  lineinfile:
-    dest: /var/lib/pgsql/{{ postgres_version }}/data/pg_hba.conf
-    regexp: '^host\s+all\s+all\s+127.0.0.1/32\s+trust'
-    state: present
-    backrefs: yes
-    line: host  all    all   127.0.0.1/32 md5
-
-- name: update postgres config(mandate password) after IPv6 local connections line
-  lineinfile:
-    dest: /var/lib/pgsql/{{ postgres_version }}/data/pg_hba.conf
-    regexp: '^host\s+all\s+all\s+::1/128\s+trust'
-    state: present
-    backrefs: yes
-    line: host  all    all   ::1/128 md5
-
-- name: Restart PostgreSQL
-  service:
-    name=postgresql-{{ postgres_version }}
-    state=restarted
-# creating user only in master dbs. User creation will be replicated in slave.
+  - name: Allow postgres port through firewall
+    command: /sbin/iptables -I INPUT 1 -p tcp --dport  5432 -j ACCEPT -m comment --comment "POSTGRES"
