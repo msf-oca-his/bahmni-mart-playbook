@@ -26,10 +26,15 @@
     dest: /tmp/initdbfile
     mode: 0777
     owner: postgres
+  when: not pgdata_dir_version.stat.exists
 
-- name: initdb
+- name: initdb with password
   command:  /usr/pgsql-9.6/bin/initdb --pgdata=/var/lib/pgsql/9.6/data --username=postgres --pwfile='/tmp/initdbfile'
   become_user: postgres
+  when: not pgdata_dir_version.stat.exists
+
+- name: remove initdbfile
+  command: rm -f /tmp/initdbfile
   when: not pgdata_dir_version.stat.exists
 
 - name: Configure connection rules and postgres
