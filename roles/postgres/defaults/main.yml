@@ -8,6 +8,7 @@ postgresql_packages:
   - python-psycopg2
   - postgresql96-contrib
   - postgresql96-server
+  - postgresql10-libs
 
 # ------------------------------------------------
 # PostgreSQL configuration file - postgresql.conf
